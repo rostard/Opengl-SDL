@@ -157,11 +157,11 @@ public:
 			}
 			break;
 		case '[':
-			m_dispFactor += 1.0f/2;
+			m_dispFactor += 1.0f;
 			break;
 
 		case ']':
-			m_dispFactor -= 1.0f/2;
+			m_dispFactor -= 1.0f;
 			break;
 		default: if (Key < 256)m_pCamera->SetKeyState(Key, true); break;
 			
