@@ -59,6 +59,7 @@ bool LightingTechnique::Init()
 	m_numSpotLightsLocation = GetUniformLocation("gNumSpotLights");
 	//m_LightWVPLoaction = GetUniformLocation("gLightWVP");
 	//m_shadowMapLocation= GetUniformLocation("gShadowMap");
+	m_TLLocation = GetUniformLocation("gTesselationLevel");
 	m_dispFactorLocation = GetUniformLocation("gDispFactor");
 	if (m_dirLightLocation.AmbientIntensity == INVALID_UNIFORM_LOCATION ||
 		m_WVPLocation == INVALID_UNIFORM_LOCATION ||
@@ -266,4 +267,9 @@ void LightingTechnique::SetSpotLights(unsigned int NumLights, const SpotLight* p
 void LightingTechnique::SetDispFactor(float Factor)
 {
 	glUniform1f(m_dispFactorLocation, Factor);
+}
+
+void LightingTechnique::SetTesselationLevel(float TL)
+{
+	glUniform1f(m_TLLocation, TL);
 }
