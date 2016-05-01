@@ -90,24 +90,27 @@ class LightingTechnique : public Technique
 		void SetMatSpecularIntensity(float Intensity);
 		void SetMatSpecularPower(float Power);
 
+		void SetTesselationLevel(float TL);
 		void SetDispFactor(float Factor);
 		
     private:
 		GLuint m_VPLocation;
-        GLuint m_WVPLocation;
-		GLuint m_LightWVPLoaction;
 		GLuint m_WorldMatrixLocation;
 
         GLuint m_colorMapLocation;
-		GLuint m_shadowMapLocation;
-		GLuint m_normalMapLocation;
-		GLuint m_displacementMapLocation;
 		GLuint m_eyeWorldPosLocation;
 		GLuint m_matSpecularIntensityLocation;
 		GLuint m_matSpecularPowerLocation;
 		GLuint m_numPointLightsLocation;
 		GLuint m_numSpotLightsLocation;
+		GLuint m_TLLocation;
+
 		GLuint m_dispFactorLocation;
+		GLuint m_WVPLocation;
+		GLuint m_LightWVPLoaction;
+		GLuint m_shadowMapLocation;
+		GLuint m_normalMapLocation;
+		GLuint m_displacementMapLocation;
 
 		struct {
 			GLuint Color;
