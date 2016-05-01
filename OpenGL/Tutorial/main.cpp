@@ -48,7 +48,7 @@ public:
 		m_dirLight.Direction = Vector3f(1.0f, 0.0f, 0.0f);
 
 		m_pDisplacementMap = NULL;
-		m_dispFactor = 0.25f;
+		m_dispFactor = 5.0f;
 		m_isWireframe = false;
 	}
 
@@ -123,14 +123,14 @@ public:
 		m_pLightingTechnique->Enable();
 		m_pLightingTechnique->SetDirectionalLight(m_dirLight);
 		m_pLightingTechnique->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
-		m_pLightingTechnique->SetDisplacementTextureUnit(DISPLACEMENT_TEXTURE_UNIT_INDEX);
-		m_pLightingTechnique->SetDispFactor(m_dispFactor);
+		//m_pLightingTechnique->SetDisplacementTextureUnit(DISPLACEMENT_TEXTURE_UNIT_INDEX);
+		m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
 		GLExitIfError();
 		m_pCamera = new Camera(WindowWidth, WindowHeight, Pos, Target, Up, gWindow);
 
 		m_pMesh = new Mesh();
 
-		return m_pMesh->LoadMesh("Content/quad2.obj");
+		return m_pMesh->LoadMesh("Content/monkey.obj");
 	}
 
 	void Run()
@@ -157,11 +157,11 @@ public:
 			}
 			break;
 		case '[':
-			m_dispFactor += 0.01f;
+			m_dispFactor += 1.0f/2;
 			break;
 
 		case ']':
-			m_dispFactor -= 0.01f;
+			m_dispFactor -= 1.0f/2;
 			break;
 		default: if (Key < 256)m_pCamera->SetKeyState(Key, true); break;
 			
@@ -252,16 +252,25 @@ public:
 		m_pCamera->OnRender();
 
 		Pipeline p;
+		p.WorldPos(-3.0f, 0.0f, 0.0f);
 		p.Scale(2.0f, 2.0f, 2.0f);
+		p.Rotate(-90.0f, 15.0f, 0.0f);
 		p.SetCamera(m_pCamera->GetPos(), m_pCamera->GetTarget(), m_pCamera->GetUp());
 		p.SetPerspectiveProj(m_persProjInfo);
 
-		m_pLightingTechnique->SetEyeWorldPos(m_pCamera->GetPos());
+		//m_pLightingTechnique->SetEyeWorldPos(m_pCamera->GetPos());
+
 		m_pLightingTechnique->SetVP(p.GetVPTrans());
-
 		m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
-		m_pLightingTechnique->SetDispFactor(m_dispFactor);
 
+		m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
+		m_pMesh->Render(NULL);
+
+		p.WorldPos(3.0f, 0.0f, 0.0f);
+		p.Rotate(-90.0f, -15.0f, 0.0f);
+		m_pLightingTechnique->SetVP(p.GetVPTrans());
+		m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
+		m_pLightingTechnique->SetTesselationLevel(1.0f);
 		m_pMesh->Render(NULL);
 		//PickingPhase();
 		//RenderPhase();
