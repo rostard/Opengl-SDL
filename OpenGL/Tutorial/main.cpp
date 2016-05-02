@@ -264,14 +264,14 @@ public:
 		m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
 
 		m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
-		m_pMesh->Render(NULL);
+		m_pMesh->Render();
 
 		p.WorldPos(3.0f, 0.0f, 0.0f);
 		p.Rotate(-90.0f, -15.0f, 0.0f);
 		m_pLightingTechnique->SetVP(p.GetVPTrans());
 		m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
 		m_pLightingTechnique->SetTesselationLevel(1.0f);
-		m_pMesh->Render(NULL);
+		m_pMesh->Render();
 		//PickingPhase();
 		//RenderPhase();
 
