@@ -107,21 +107,17 @@ bool SDLBackendCreateWindow(unsigned int Width, unsigned int Height, unsigned in
 	{
 		//Create window
 		*Window = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Width, Height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
-		if (*Window == NULL)
-		{
-			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
-			return false;
-		}
 	}
 	else
 	{
 		//Create window
 		*Window = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Width, Height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-		if (*Window == NULL)
-		{
-			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
-			return false;
-		}
+	}
+
+	if (*Window == NULL)
+	{
+		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
+		return false;
 	}
 
 	//Create context
