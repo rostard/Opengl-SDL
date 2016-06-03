@@ -1,3 +1,8 @@
+/*
+Simple Network Library from "Networking for Game Programmers"
+http://www.gaffer.org/networking-for-game-programmers
+Author: Glenn Fiedler <gaffer@gaffer.org>
+*/
 
 #ifndef NET_H
 #define NET_H
@@ -19,7 +24,6 @@
 #if PLATFORM == PLATFORM_WINDOWS
 
 #include <winsock2.h>
-#include <stdio.h>
 #pragma comment( lib, "wsock32.lib" )
 
 #elif PLATFORM == PLATFORM_MAC || PLATFORM == PLATFORM_UNIX
@@ -35,6 +39,9 @@
 #endif
 
 #include <assert.h>
+#include <vector>
+#include <map>
+#include <stack>
 
 namespace net
 {
@@ -116,6 +123,17 @@ namespace net
 		bool operator != (const Address & other) const
 		{
 			return !(*this == other);
+		}
+
+		bool operator < (const Address & other) const
+		{
+			// note: this is so we can use address as a key in std::map
+			if (address < other.address)
+				return true;
+			if (address > other.address)
+				return false;
+			else
+				return port < other.port;
 		}
 
 	private:
@@ -239,6 +257,9 @@ namespace net
 			if (socket == 0)
 				return false;
 
+			assert(destination.GetAddress() != 0);
+			assert(destination.GetPort() != 0);
+
 			sockaddr_in address;
 			address.sin_family = AF_INET;
 			address.sin_addr.s_addr = htonl(destination.GetAddress());
@@ -270,7 +291,7 @@ namespace net
 				return 0;
 
 			unsigned int address = ntohl(from.sin_addr.s_addr);
-			unsigned int port = ntohs(from.sin_port);
+			unsigned short port = ntohs(from.sin_port);
 
 			sender = Address(address, port);
 
@@ -280,6 +301,199 @@ namespace net
 	private:
 
 		int socket;
+	};
+
+	// connection
+
+	class Connection
+	{
+	public:
+
+		enum Mode
+		{
+			None,
+			Client,
+			Server
+		};
+
+		Connection(unsigned int protocolId, float timeout)
+		{
+			this->protocolId = protocolId;
+			this->timeout = timeout;
+			mode = None;
+			running = false;
+			ClearData();
+		}
+
+		~Connection()
+		{
+			if (running)
+				Stop();
+		}
+
+		bool Start(int port)
+		{
+			assert(!running);
+			printf("start connection on port %d\n", port);
+			if (!socket.Open(port))
+				return false;
+			running = true;
+			return true;
+		}
+
+		void Stop()
+		{
+			assert(running);
+			printf("stop connection\n");
+			ClearData();
+			socket.Close();
+			running = false;
+		}
+
+		void Listen()
+		{
+			printf("server listening for connection\n");
+			ClearData();
+			mode = Server;
+			state = Listening;
+		}
+
+		void Connect(const Address & address)
+		{
+			printf("client connecting to %d.%d.%d.%d:%d\n",
+				address.GetA(), address.GetB(), address.GetC(), address.GetD(), address.GetPort());
+			ClearData();
+			mode = Client;
+			state = Connecting;
+			this->address = address;
+		}
+
+		bool IsConnecting() const
+		{
+			return state == Connecting;
+		}
+
+		bool ConnectFailed() const
+		{
+			return state == ConnectFail;
+		}
+
+		bool IsConnected() const
+		{
+			return state == Connected;
+		}
+
+		bool IsListening() const
+		{
+			return state == Listening;
+		}
+
+		Mode GetMode() const
+		{
+			return mode;
+		}
+
+		void Update(float deltaTime)
+		{
+			assert(running);
+			timeoutAccumulator += deltaTime;
+			if (timeoutAccumulator > timeout)
+			{
+				if (state == Connecting)
+				{
+					printf("connect timed out\n");
+					ClearData();
+					state = ConnectFail;
+				}
+				else if (state == Connected)
+				{
+					printf("connection timed out\n");
+					ClearData();
+					if (state == Connecting)
+						state = ConnectFail;
+				}
+			}
+		}
+
+		bool SendPacket(const unsigned char data[], int size)
+		{
+			assert(running);
+			if (address.GetAddress() == 0)
+				return false;
+			char* packet = new char[size + 4];
+			packet[0] = (unsigned char)(protocolId >> 24);
+			packet[1] = (unsigned char)((protocolId >> 16) & 0xFF);
+			packet[2] = (unsigned char)((protocolId >> 8) & 0xFF);
+			packet[3] = (unsigned char)((protocolId) & 0xFF);
+			memcpy(&packet[4], data, size);
+			return socket.Send(address, packet, size + 4);
+		}
+
+		int ReceivePacket(unsigned char data[], int size)
+		{
+			assert(running);
+			char* packet = new char[size + 4];
+			Address sender;
+			int bytes_read = socket.Receive(sender, packet, size + 4);
+			if (bytes_read == 0)
+				return 0;
+			if (bytes_read <= 4)
+				return 0;
+			if (packet[0] != (unsigned char)(protocolId >> 24) ||
+				packet[1] != (unsigned char)((protocolId >> 16) & 0xFF) ||
+				packet[2] != (unsigned char)((protocolId >> 8) & 0xFF) ||
+				packet[3] != (unsigned char)(protocolId & 0xFF))
+				return 0;
+			if (mode == Server && !IsConnected())
+			{
+				printf("server accepts connection from client %d.%d.%d.%d:%d\n",
+					sender.GetA(), sender.GetB(), sender.GetC(), sender.GetD(), sender.GetPort());
+				state = Connected;
+				address = sender;
+			}
+			if (sender == address)
+			{
+				if (mode == Client && state == Connecting)
+				{
+					printf("client completes connection with server\n");
+					state = Connected;
+				}
+				timeoutAccumulator = 0.0f;
+				memcpy(data, &packet[4], size - 4);
+				return size - 4;
+			}
+			return 0;
+		}
+
+	protected:
+
+		void ClearData()
+		{
+			state = Disconnected;
+			timeoutAccumulator = 0.0f;
+			address = Address();
+		}
+
+	private:
+
+		enum State
+		{
+			Disconnected,
+			Listening,
+			Connecting,
+			ConnectFail,
+			Connected
+		};
+
+		unsigned int protocolId;
+		float timeout;
+
+		bool running;
+		Mode mode;
+		State state;
+		Socket socket;
+		float timeoutAccumulator;
+		Address address;
 	};
 }
 

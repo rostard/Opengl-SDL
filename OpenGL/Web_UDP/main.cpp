@@ -46,7 +46,7 @@ int main()
 
 	while (true)
 	{
-		const char data[] = "hello world!";
+		const char data[] = "hello world, to everyone!";
 
 		socket2.Send(Address(127, 0, 0, 1, port), data, sizeof(data));
 
@@ -57,9 +57,9 @@ int main()
 			int bytes_read = socket.Receive(sender, buffer, sizeof(buffer));
 			if (!bytes_read)
 				break;
-			printf("received packet from %d.%d.%d.%d:%d (%d bytes)\n",
+			printf("received packet from %d.%d.%d.%d:%d (%d bytes): %s\n",
 				sender.GetA(), sender.GetB(), sender.GetC(), sender.GetD(),
-				sender.GetPort(), bytes_read);
+				sender.GetPort(), bytes_read, buffer);
 		}
 
 		wait(0.25f);
