@@ -1,3 +1,9 @@
+/*
+Client using Virtual Connection over UDP
+From "Networking for Game Programmers" - http://www.gaffer.org/networking-for-game-programmers
+Author: Glenn Fiedler <gaffer@gaffer.org>
+*/
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -7,44 +13,63 @@
 
 using namespace std;
 using namespace net;
-int main()
-{
-	// initialize socket layer
 
+const int ServerPort = 30000;
+const int ClientPort = 30001;
+const int ProtocolId = 0x99887766;
+const float DeltaTime = 0.25f;
+const float SendRate = 0.25f;
+const float TimeOut = 10.0f;
+
+int main(int argc, char * argv[])
+{
 	if (!InitializeSockets())
 	{
-		printf("failed to initialize sockets %d\n", WSAGetLastError());
+		printf("failed to initialize sockets\n");
 		return 1;
 	}
 
-	// create socket
+	Connection connection(ProtocolId, TimeOut);
 
-	int port = 30000;
-	int port2 = 30001;
-
-	printf("creating socket on port %d\n", port);
-
-	Socket socket2;
-
-	if (!socket2.Open(port2))
+	if (!connection.Start(ClientPort))
 	{
-		printf("failed to create socket!\n");
+		printf("could not start connection on port %d\n", ClientPort);
 		return 1;
 	}
 
-	// send and receive packets to ourself until the user ctrl-breaks...
+	connection.Connect(Address(127, 0, 0, 1, ServerPort));
+
+	bool connected = false;
 
 	while (true)
 	{
-		const char data[] = "hello world, to everyone!";
+		if (!connected && connection.IsConnected())
+		{
+			printf("client connected to server\n");
+			connected = true;
+		}
 
-		socket2.Send(Address(127, 0, 0, 1, port), data, sizeof(data));
-		printf("Sent packet to 127.0.0.1:30000");
+		if (!connected && connection.ConnectFailed())
+		{
+			printf("connection failed\n");
+			break;
+		}
 
-		wait(0.25f);
+		unsigned char packet[] = "client to server";
+		connection.SendPacket(packet, sizeof(packet));
+
+		while (true)
+		{
+			unsigned char packet[256];
+			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
+			if (bytes_read == 0)
+				break;
+			printf("received packet from server\n");
+		}
+
+		connection.Update(DeltaTime);
+		wait(DeltaTime);
 	}
-
-	// shutdown socket layer
 
 	ShutdownSockets();
 

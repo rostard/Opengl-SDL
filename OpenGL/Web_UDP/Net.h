@@ -420,7 +420,8 @@ namespace net
 			assert(running);
 			if (address.GetAddress() == 0)
 				return false;
-			char* packet = new char[size + 4];
+
+			char *packet=new char[size + 4];
 			packet[0] = (unsigned char)(protocolId >> 24);
 			packet[1] = (unsigned char)((protocolId >> 16) & 0xFF);
 			packet[2] = (unsigned char)((protocolId >> 8) & 0xFF);
