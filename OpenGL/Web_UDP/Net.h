@@ -421,7 +421,7 @@ namespace net
 			if (address.GetAddress() == 0)
 				return false;
 
-			char *packet=new char[size + 4];
+			unsigned char *packet=new unsigned char[size + 4];
 			packet[0] = (unsigned char)(protocolId >> 24);
 			packet[1] = (unsigned char)((protocolId >> 16) & 0xFF);
 			packet[2] = (unsigned char)((protocolId >> 8) & 0xFF);
@@ -433,7 +433,7 @@ namespace net
 		int ReceivePacket(unsigned char data[], int size)
 		{
 			assert(running);
-			char* packet = new char[size + 4];
+			unsigned char* packet = new unsigned char[size + 4];
 			Address sender;
 			int bytes_read = socket.Receive(sender, packet, size + 4);
 			if (bytes_read == 0)
