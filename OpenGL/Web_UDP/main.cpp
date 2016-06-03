@@ -24,16 +24,6 @@ int main()
 
 	printf("creating socket on port %d\n", port);
 
-	Socket socket;
-
-	if (!socket.Open(port))
-	{
-		printf("failed to create socket!\n");
-		return 1;
-	}
-
-	printf("creating socket on port %d\n", port);
-
 	Socket socket2;
 
 	if (!socket2.Open(port2))
@@ -49,18 +39,7 @@ int main()
 		const char data[] = "hello world, to everyone!";
 
 		socket2.Send(Address(127, 0, 0, 1, port), data, sizeof(data));
-
-		while (true)
-		{
-			Address sender;
-			unsigned char buffer[256];
-			int bytes_read = socket.Receive(sender, buffer, sizeof(buffer));
-			if (!bytes_read)
-				break;
-			printf("received packet from %d.%d.%d.%d:%d (%d bytes): %s\n",
-				sender.GetA(), sender.GetB(), sender.GetC(), sender.GetD(),
-				sender.GetPort(), bytes_read, buffer);
-		}
+		printf("Sent packet to 127.0.0.1:30000");
 
 		wait(0.25f);
 	}
