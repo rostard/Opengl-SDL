@@ -93,6 +93,7 @@ class LightingTechnique : public Technique
 		void SetTesselationLevel(float TL);
 		void SetDispFactor(float Factor);
 		
+		void SetColor(unsigned int Index, Vector4f &Color);
     private:
 		GLuint m_VPLocation;
 		GLuint m_WorldMatrixLocation;
@@ -111,6 +112,8 @@ class LightingTechnique : public Technique
 		GLuint m_shadowMapLocation;
 		GLuint m_normalMapLocation;
 		GLuint m_displacementMapLocation;
+
+		GLuint m_colorLocation;
 
 		struct {
 			GLuint Color;

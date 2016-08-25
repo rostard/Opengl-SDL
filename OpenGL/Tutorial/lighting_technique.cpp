@@ -22,7 +22,7 @@ bool LightingTechnique::Init()
         return false;
     }
 
-	if (!AddShader(GL_TESS_CONTROL_SHADER, "Lighting.tcs"))
+	/*if (!AddShader(GL_TESS_CONTROL_SHADER, "Lighting.tcs"))
 	{
 		return false;
 	}
@@ -30,7 +30,7 @@ bool LightingTechnique::Init()
 	if (!AddShader(GL_TESS_EVALUATION_SHADER, "Lighting.tes"))
 	{
 		return false;
-	}
+	}*/
 
     if (!AddShader(GL_FRAGMENT_SHADER, "Lighting.fs"))
     {
@@ -42,12 +42,12 @@ bool LightingTechnique::Init()
         return false;
     }
 
-	m_VPLocation = GetUniformLocation("gVP");
+	//m_VPLocation = GetUniformLocation("gVP");
 	//m_WVPLocation = GetUniformLocation("gWVP");
-	m_WorldMatrixLocation = GetUniformLocation("gWorld");
+	//m_WorldMatrixLocation = GetUniformLocation("gWorld");
 	m_colorMapLocation = GetUniformLocation("gColorMap");
 	//m_normalMapLocation = GetUniformLocation("gNormalMap");
-	m_displacementMapLocation = GetUniformLocation("gDisplacementMap");
+	//m_displacementMapLocation = GetUniformLocation("gDisplacementMap");
 	m_eyeWorldPosLocation = GetUniformLocation("gEyeWorldPos"); 
 	m_dirLightLocation.Color = GetUniformLocation("gDirectionalLight.Base.Color");
 	m_dirLightLocation.AmbientIntensity = GetUniformLocation("gDirectionalLight.Base.AmbientIntensity");
@@ -59,8 +59,8 @@ bool LightingTechnique::Init()
 	m_numSpotLightsLocation = GetUniformLocation("gNumSpotLights");
 	//m_LightWVPLoaction = GetUniformLocation("gLightWVP");
 	//m_shadowMapLocation= GetUniformLocation("gShadowMap");
-	m_TLLocation = GetUniformLocation("gTesselationLevel");
-	m_dispFactorLocation = GetUniformLocation("gDispFactor");
+	//m_TLLocation = GetUniformLocation("gTesselationLevel");
+	//m_dispFactorLocation = GetUniformLocation("gDispFactor");
 	if (m_dirLightLocation.AmbientIntensity == INVALID_UNIFORM_LOCATION ||
 		m_WVPLocation == INVALID_UNIFORM_LOCATION ||
 		m_LightWVPLoaction == INVALID_UNIFORM_LOCATION ||
@@ -272,4 +272,8 @@ void LightingTechnique::SetDispFactor(float Factor)
 void LightingTechnique::SetTesselationLevel(float TL)
 {
 	glUniform1f(m_TLLocation, TL);
+}
+
+void LightingTechnique::SetColor(unsigned int Index, Vector4f& Color) {
+	//glUniform4f(m_co)
 }

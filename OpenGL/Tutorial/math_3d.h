@@ -179,6 +179,18 @@ public:
     {        
     }
 
+	Matrix4f Transpose() const 
+	{
+		Matrix4f n;
+
+		for (unsigned int i = 0; i < 4; i++) {
+			for (unsigned int j = 0; j < 4; j++) {
+				n.m[i][j] = m[j][i];
+			}
+		}
+
+		return n;
+	}
 
     inline void InitIdentity()
     {

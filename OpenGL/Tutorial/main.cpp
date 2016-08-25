@@ -21,6 +21,10 @@ using namespace std;
 
 int WindowWidth = 1280, WindowHeight = 768;
 
+#define NUM_ROWS 50
+#define NUM_COLS 20
+#define NUM_INSTANCES NUM_ROWS * NUM_COLS
+
 class Main : public ICallbacks
 {
 public:
@@ -50,6 +54,7 @@ public:
 		m_pDisplacementMap = NULL;
 		m_dispFactor = 5.0f;
 		m_isWireframe = false;
+		m_scale = 0;
 	}
 
 	virtual ~Main()
@@ -60,56 +65,56 @@ public:
 		SAFE_DELETE(m_pLightingTechnique);
 	}
 
-	bool Init()
+	bool Init() 
 	{
-		Vector3f Pos(0.0f, 5.0f, -22.0f);
+		Vector3f Pos(7.0f, 3.0f, 0.0f);
 		Vector3f Target(0.0f, -0.2f, 1.0f);
 		Vector3f Up(0.0, 1.0f, 0.0f);
 
-		GLint MaxPatchVertices = 0;
-		glGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
-		printf("Max supported patch vertices %d\n", MaxPatchVertices);
+		//GLint MaxPatchVertices = 0;
+		//glGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		//printf("Max supported patch vertices %d\n", MaxPatchVertices);
 
-		glActiveTexture(GL_TEXTURE4);
-		m_pDisplacementMap = new Texture(GL_TEXTURE_2D, "Content/heightmap.jpg");
+		//glActiveTexture(GL_TEXTURE4);
+		//m_pDisplacementMap = new Texture(GL_TEXTURE_2D, "Content/heightmap.jpg");
 
-		if (!m_pDisplacementMap->Load()) {
-			return false;
-		}
+		//if (!m_pDisplacementMap->Load()) {
+		//	return false;
+		//}
 
-		m_pDisplacementMap->Bind(DISPLACEMENT_TEXTURE_UNIT);
+		//m_pDisplacementMap->Bind(DISPLACEMENT_TEXTURE_UNIT);
 
-		glActiveTexture(GL_TEXTURE0);
-		m_pColorMap = new Texture(GL_TEXTURE_2D, "Content/diffuse.jpg");
+		//glActiveTexture(GL_TEXTURE0);
+		//m_pColorMap = new Texture(GL_TEXTURE_2D, "Content/diffuse.jpg");
 
-		if (!m_pColorMap->Load()) {
-			return false;
-		}
+		//if (!m_pColorMap->Load()) {
+		//	return false;
+		//}
 
-		m_pColorMap->Bind(COLOR_TEXTURE_UNIT);
+		//m_pColorMap->Bind(COLOR_TEXTURE_UNIT);
 
 		/*
 		m_pSimpleTechnique = new SimpleColorTechnique();
 
 		if (!m_pSimpleTechnique->Init())
 		{
-			printf("error init simple color technique");
-			return false;
+		printf("error init simple color technique");
+		return false;
 		}
 
 		m_pPickingTechnique = new PickingTechnique();
 
 		if (!m_pPickingTechnique->Init())
 		{
-			printf("error init picking technique");
-			return false;
+		printf("error init picking technique");
+		return false;
 		}
 
 		m_pPickingTexture = new PickingTexture();
 		if (!m_pPickingTexture->Init(WindowWidth, WindowHeight))
 		{
-			printf("error init picking terchnique");
-			return false;
+		printf("error init picking terchnique");
+		return false;
 		}
 		*/
 		m_pLightingTechnique = new LightingTechnique();
@@ -122,15 +127,19 @@ public:
 
 		m_pLightingTechnique->Enable();
 		m_pLightingTechnique->SetDirectionalLight(m_dirLight);
+		m_pLightingTechnique->SetMatSpecularPower(0);
 		m_pLightingTechnique->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
+		m_pLightingTechnique->SetMatSpecularIntensity(0.0f);
 		//m_pLightingTechnique->SetDisplacementTextureUnit(DISPLACEMENT_TEXTURE_UNIT_INDEX);
-		m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
+		//m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
 		GLExitIfError();
 		m_pCamera = new Camera(WindowWidth, WindowHeight, Pos, Target, Up, gWindow);
 
+		CalcPositions();
+
 		m_pMesh = new Mesh();
 
-		return m_pMesh->LoadMesh("Content/monkey.obj");
+		return m_pMesh->LoadMesh("Content/spider.obj");
 	}
 
 	void Run()
@@ -246,32 +255,43 @@ public:
 	}*/
 	virtual void RenderSceneCB()
 	{
+		m_scale += 0.005f;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		m_pCamera->OnKeyboard();
 		m_pCamera->OnRender();
 
 		Pipeline p;
-		p.WorldPos(-3.0f, 0.0f, 0.0f);
-		p.Scale(2.0f, 2.0f, 2.0f);
-		p.Rotate(-90.0f, 15.0f, 0.0f);
+		p.Rotate(0.0f, 90.0f, 0.0f);
+		p.Scale(0.005f, 0.005f, 0.005f);
+		
 		p.SetCamera(m_pCamera->GetPos(), m_pCamera->GetTarget(), m_pCamera->GetUp());
 		p.SetPerspectiveProj(m_persProjInfo);
 
+		Matrix4f WVPMatricx[NUM_INSTANCES];
+		Matrix4f WorldMatrics[NUM_INSTANCES];
+
+		for (unsigned int i = 0; i < NUM_INSTANCES; i++) {
+			Vector3f Pos(m_positions[i]);
+			Pos.y += sinf(m_scale)*m_velocity[i];
+			p.WorldPos(Pos);
+			WVPMatricx[i] = p.GetWVPTrans().Transpose();
+			WorldMatrics[i] = p.GetWorldTrans().Transpose();
+		}
 		//m_pLightingTechnique->SetEyeWorldPos(m_pCamera->GetPos());
 
-		m_pLightingTechnique->SetVP(p.GetVPTrans());
-		m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
+		//m_pLightingTechnique->SetVP(p.GetVPTrans());
+		//m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
 
-		m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
-		m_pMesh->Render();
+		//m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
+		m_pMesh->Render(NUM_INSTANCES,WVPMatricx,WorldMatrics);
 
-		p.WorldPos(3.0f, 0.0f, 0.0f);
-		p.Rotate(-90.0f, -15.0f, 0.0f);
-		m_pLightingTechnique->SetVP(p.GetVPTrans());
-		m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
-		m_pLightingTechnique->SetTesselationLevel(1.0f);
-		m_pMesh->Render();
+		//p.WorldPos(3.0f, 0.0f, 0.0f);
+		//p.Rotate(-90.0f, -15.0f, 0.0f);
+		//m_pLightingTechnique->SetVP(p.GetVPTrans());
+		//m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
+		//m_pLightingTechnique->SetTesselationLevel(1.0f);
+		//m_pMesh->Render();
 		//PickingPhase();
 		//RenderPhase();
 
@@ -290,7 +310,21 @@ public:
 
 		m_pMesh->Render(NULL);*/
 	}
-
+	void CalcPositions()
+	{
+		for (unsigned int i = 0; i < NUM_ROWS; i++) {
+			for (unsigned int j = 0; j < NUM_COLS; j++) {
+				unsigned int Index = i * NUM_COLS + j;
+				m_positions[Index].x = (float)j;
+				m_positions[Index].y = RandomFloat() * 5.0f;
+				m_positions[Index].z = (float)i;
+				m_velocity[Index] = RandomFloat();
+				if (i & 1) {
+					m_velocity[Index] *= (-1.0f);
+				}
+			}
+		}
+	}
 	SDL_Window* gWindow;
 	SDL_GLContext gContext;
 private:
@@ -302,6 +336,9 @@ private:
 	PickingTechnique *m_pPickingTechnique;
 	PickingTexture *m_pPickingTexture;*/
 	Camera *m_pCamera;
+	Vector3f m_positions[NUM_INSTANCES];
+	float m_scale;
+	float m_velocity[NUM_INSTANCES];
 	
 	struct {
 		bool IsPressed;

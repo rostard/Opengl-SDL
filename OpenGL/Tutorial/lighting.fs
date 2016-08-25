@@ -2,13 +2,15 @@
                                                                                             
 const int MAX_POINT_LIGHTS = 2;                                                             
 const int MAX_SPOT_LIGHTS = 2;                                                              
-                                                                                            
-in vec2 TexCoord_FS_in;                                                                     
-in vec3 Normal_FS_in;                                                                       
-in vec3 WorldPos_FS_in;                                                                     
+
+flat in int InstanceID;
+                                                                                       
+in vec2 TexCoord0;                                                                     
+in vec3 Normal0;                                                                       
+in vec3 WorldPos0;                                                                     
                                                                                             
 out vec4 FragColor;                                                                         
-                                                                                            
+
 struct BaseLight                                                                            
 {                                                                                           
     vec3 Color;                                                                             
@@ -64,7 +66,7 @@ vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, vec3 Normal)
     if (DiffuseFactor > 0) {                                                                
         DiffuseColor = vec4(Light.Color * Light.DiffuseIntensity * DiffuseFactor, 1.0f);
                                                                                             
-        vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos_FS_in);                        
+        vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos0);                        
         vec3 LightReflect = normalize(reflect(LightDirection, Normal));                     
         float SpecularFactor = dot(VertexToEye, LightReflect);                              
         if (SpecularFactor > 0) {                                                           
@@ -83,7 +85,7 @@ vec4 CalcDirectionalLight(vec3 Normal)
                                                                                             
 vec4 CalcPointLight(PointLight l, vec3 Normal)                                       
 {                                                                                           
-    vec3 LightDirection = WorldPos_FS_in - l.Position;                                      
+    vec3 LightDirection = WorldPos0 - l.Position;                                      
     float Distance = length(LightDirection);                                                
     LightDirection = normalize(LightDirection);                                             
                                                                                             
@@ -97,7 +99,7 @@ vec4 CalcPointLight(PointLight l, vec3 Normal)
                                                                                             
 vec4 CalcSpotLight(SpotLight l, vec3 Normal)                                         
 {                                                                                           
-    vec3 LightToPixel = normalize(WorldPos_FS_in - l.Base.Position);                        
+    vec3 LightToPixel = normalize(WorldPos0 - l.Base.Position);                        
     float SpotFactor = dot(LightToPixel, l.Direction);                                      
                                                                                             
     if (SpotFactor > l.Cutoff) {                                                            
@@ -111,7 +113,7 @@ vec4 CalcSpotLight(SpotLight l, vec3 Normal)
                                                                                             
 void main()                                                                                 
 {                                                                                           
-    vec3 Normal = normalize(Normal_FS_in);                                                  
+    vec3 Normal = normalize(Normal0);                                                  
     vec4 TotalLight = CalcDirectionalLight(Normal);                                         
                                                                                             
     for (int i = 0 ; i < gNumPointLights ; i++) {                                           
@@ -122,5 +124,5 @@ void main()
         TotalLight += CalcSpotLight(gSpotLights[i], Normal);                                
     }                                                                                       
                                                                                             
-    FragColor = texture(gColorMap, TexCoord_FS_in.xy) * TotalLight;                         
+    FragColor = texture(gColorMap, TexCoord0.xy) * TotalLight;                         
 }

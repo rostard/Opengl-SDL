@@ -59,6 +59,7 @@ public:
 
     //void Render(IRenderCallbacks* pRenderCallbacks);
 	void Render();
+	void Render(unsigned int NumInstances, const Matrix4f* WVPMats, const Matrix4f* WorldMats);
 private:
 
     bool InitFromScene(const aiScene* pScene, const std::string& Filename);
@@ -75,9 +76,10 @@ private:
 #define POS_VB 1
 #define NORMAL_VB 2
 #define TEXCOORD_VB 3
-
+#define WVP_MAT_VB 4
+#define WORLD_MAT_VB 5
 	GLuint m_VAO;
-	GLuint m_Buffers[4];
+	GLuint m_Buffers[6];
 
     struct MeshEntry {
 		MeshEntry()
