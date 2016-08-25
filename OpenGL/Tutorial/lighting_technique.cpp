@@ -57,6 +57,17 @@ bool LightingTechnique::Init()
 	m_matSpecularPowerLocation = GetUniformLocation("gSpecularPower");
 	m_numPointLightsLocation = GetUniformLocation("gNumPointLights");
 	m_numSpotLightsLocation = GetUniformLocation("gNumSpotLights");
+	for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_colorLocation); i++) {
+		char Name[32];
+		memset(Name, 0, sizeof(Name));
+		snprintf(Name, sizeof(Name), "gColor[%d]", i);
+
+		m_colorLocation[i] = GetUniformLocation(Name);
+
+		if (m_colorLocation[i] == INVALID_UNIFORM_LOCATION) {
+			return false;
+		}
+	}
 	//m_LightWVPLoaction = GetUniformLocation("gLightWVP");
 	//m_shadowMapLocation= GetUniformLocation("gShadowMap");
 	//m_TLLocation = GetUniformLocation("gTesselationLevel");
@@ -275,5 +286,5 @@ void LightingTechnique::SetTesselationLevel(float TL)
 }
 
 void LightingTechnique::SetColor(unsigned int Index, Vector4f& Color) {
-	//glUniform4f(m_co)
+	glUniform4f(m_colorLocation[Index], Color.x, Color.y, Color.z, Color.w);
 }

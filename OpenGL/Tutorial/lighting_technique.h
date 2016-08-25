@@ -113,7 +113,7 @@ class LightingTechnique : public Technique
 		GLuint m_normalMapLocation;
 		GLuint m_displacementMapLocation;
 
-		GLuint m_colorLocation;
+		GLuint m_colorLocation[4];
 
 		struct {
 			GLuint Color;

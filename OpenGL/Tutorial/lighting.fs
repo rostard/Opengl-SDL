@@ -53,7 +53,8 @@ uniform SpotLight gSpotLights[MAX_SPOT_LIGHTS];
 uniform sampler2D gColorMap;                                                                
 uniform vec3 gEyeWorldPos;                                                                  
 uniform float gMatSpecularIntensity;                                                        
-uniform float gSpecularPower;                                                               
+uniform float gSpecularPower;                                 
+uniform vec4 gColor[4];                              
                                                                                             
 vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, vec3 Normal)            
 {                                                                                           
@@ -124,5 +125,5 @@ void main()
         TotalLight += CalcSpotLight(gSpotLights[i], Normal);                                
     }                                                                                       
                                                                                             
-    FragColor = texture(gColorMap, TexCoord0.xy) * TotalLight;                         
+    FragColor = texture(gColorMap, TexCoord0.xy) * gColor[InstanceID%4] * TotalLight;                         
 }

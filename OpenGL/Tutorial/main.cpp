@@ -130,6 +130,10 @@ public:
 		m_pLightingTechnique->SetMatSpecularPower(0);
 		m_pLightingTechnique->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
 		m_pLightingTechnique->SetMatSpecularIntensity(0.0f);
+		m_pLightingTechnique->SetColor(0, Vector4f(1.0f, 0.5f, 0.5f, 0.0f));
+		m_pLightingTechnique->SetColor(1, Vector4f(0.5f, 1.0f, 1.0f, 0.0f));
+		m_pLightingTechnique->SetColor(2, Vector4f(1.0f, 0.5f, 1.0f, 0.0f));
+		m_pLightingTechnique->SetColor(3, Vector4f(1.0f, 1.0f, 1.0f, 0.0f));
 		//m_pLightingTechnique->SetDisplacementTextureUnit(DISPLACEMENT_TEXTURE_UNIT_INDEX);
 		//m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
 		GLExitIfError();
