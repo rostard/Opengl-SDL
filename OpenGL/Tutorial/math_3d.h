@@ -33,6 +33,9 @@ struct Vector2i
 {
     int x;
     int y;
+	Vector2i() {
+
+	}
 
 	Vector2i(int _x, int _y) 
 	{
