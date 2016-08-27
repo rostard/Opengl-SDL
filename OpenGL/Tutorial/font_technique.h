@@ -12,7 +12,9 @@ public:
 
 	void SetColor(const Vector3f Color);
 	void SetWorld(const Matrix4f World);
+	void SetColorTextureUnit(unsigned int TextureUnit);
 private:
+	GLuint m_colorTextureLocation;
 	GLuint m_colorLocation;
 	GLuint m_worldLocation;
 };

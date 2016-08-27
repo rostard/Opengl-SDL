@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 layout (location=0) in vec4 Vertex;
 
@@ -8,6 +8,6 @@ uniform mat4 gProjection;
 
 void main()
 {
-		gl_Position = gProjection * vec4(Vertex.xy,0.0,1.0);
+		gl_Position = vec4(Vertex.xy,0.0,1.0);
 		TexCoords=Vertex.zw;
 }

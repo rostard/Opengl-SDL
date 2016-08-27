@@ -19,12 +19,18 @@ bool FontTechnique::Init() {
 	}
 	m_colorLocation = GetUniformLocation("gTextColor");
 	m_worldLocation = GetUniformLocation("gProjection");
-
+	m_colorTextureLocation = GetUniformLocation("gText");
+	return true;
 }
 void FontTechnique::SetColor(const Vector3f Color) {
 	glUniform3f(m_colorLocation, Color.x, Color.y, Color.z);
 }
 
 void FontTechnique::SetWorld(const Matrix4f World) {
-	glUniformMatrix4fv(m_worldLocation, 1, GL_FALSE, (const GLfloat*)World.m);
+	glUniformMatrix4fv(m_worldLocation, 1, GL_TRUE, (const GLfloat*)World.m);
+}
+
+void FontTechnique::SetColorTextureUnit(unsigned int TextureUnit)
+{
+	glUniform1i(m_colorTextureLocation,TextureUnit);
 }

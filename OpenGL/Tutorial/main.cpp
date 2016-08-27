@@ -14,6 +14,7 @@
 #include "engine_common.h" 
 #include "picking_technique.h"
 #include "picking_texture.h"
+#include "FontRender.h"
 #undef main
 
 
@@ -55,6 +56,7 @@ public:
 		m_dispFactor = 5.0f;
 		m_isWireframe = false;
 		m_scale = 0;
+		m_pFont = 0;
 	}
 
 	virtual ~Main()
@@ -92,6 +94,8 @@ public:
 		//}
 
 		//m_pColorMap->Bind(COLOR_TEXTURE_UNIT);
+		
+		m_pMesh = new Mesh();
 
 		/*
 		m_pSimpleTechnique = new SimpleColorTechnique();
@@ -141,7 +145,11 @@ public:
 
 		CalcPositions();
 
-		m_pMesh = new Mesh();
+		m_pFont = new FontRenderer();
+		if (!m_pFont->Init("arial.ttf")) {
+			cout << "Couldn't init FontRenderer" << endl;
+			return false;
+		}
 
 		return m_pMesh->LoadMesh("Content/spider.obj");
 	}
@@ -259,6 +267,7 @@ public:
 	}*/
 	virtual void RenderSceneCB()
 	{
+		m_pLightingTechnique->Enable();
 		m_scale += 0.005f;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -267,7 +276,7 @@ public:
 
 		Pipeline p;
 		p.Rotate(0.0f, 90.0f, 0.0f);
-		p.Scale(0.005f, 0.005f, 0.005f);
+		p.Scale(0.001f, 0.001f, 0.001f);
 		
 		p.SetCamera(m_pCamera->GetPos(), m_pCamera->GetTarget(), m_pCamera->GetUp());
 		p.SetPerspectiveProj(m_persProjInfo);
@@ -288,7 +297,9 @@ public:
 		//m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
 
 		//m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
+		
 		m_pMesh->Render(NUM_INSTANCES,WVPMatricx,WorldMatrics);
+		m_pFont->RenderText("Simple Text fo test GO go", 0.5, 0.5, 0.1, Vector3f(1.0, 1.0, 1.0));
 
 		//p.WorldPos(3.0f, 0.0f, 0.0f);
 		//p.Rotate(-90.0f, -15.0f, 0.0f);
@@ -343,7 +354,7 @@ private:
 	Vector3f m_positions[NUM_INSTANCES];
 	float m_scale;
 	float m_velocity[NUM_INSTANCES];
-	
+	FontRenderer *m_pFont;
 	struct {
 		bool IsPressed;
 		int x;
