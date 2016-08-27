@@ -45,11 +45,6 @@ public:
 		GLCheckError();
 		GenBuffers();
 
-		m_pTexture = new Texture(GL_TEXTURE_2D,"testRed.jpg");
-		if (!m_pTexture->Load()) {
-
-		}
-
 		return true;
 	}
 	bool LoadFont(char* FontName) {
@@ -189,6 +184,4 @@ private:
 	FT_Face face;
 	GLuint VAO, VBO;
 	std::map<GLchar, Character> Characters;
-
-	Texture* m_pTexture;
 };
