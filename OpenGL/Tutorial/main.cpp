@@ -267,7 +267,6 @@ public:
 	}*/
 	virtual void RenderSceneCB()
 	{
-		CalcFps();
 		m_pLightingTechnique->Enable();
 		m_scale += 0.005f;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -300,8 +299,7 @@ public:
 		//m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
 		
 		m_pMesh->Render(NUM_INSTANCES,WVPMatricx,WorldMatrics);
-		RenderFPS();
-		
+		m_pFont->RenderText("Simple Text fo test GO go", 0.5, 0.5, 0.1, Vector3f(1.0, 1.0, 1.0));
 
 		//p.WorldPos(3.0f, 0.0f, 0.0f);
 		//p.Rotate(-90.0f, -15.0f, 0.0f);
@@ -345,25 +343,6 @@ public:
 	SDL_Window* gWindow;
 	SDL_GLContext gContext;
 private:
-	void CalcFps() {
-		m_frameCount++;
-
-		int time = glutGet(GLUT_ELAPSED_TIME);
-		if (time - m_time > 1000) {
-			m_fps = (float)m_frameCount*1000.0f / (time - m_time);
-			m_time = time;
-			m_frameCount = 0;
-		}
-
-	}
-
-	void RenderFPS() {
-		char text[32];
-		snprintf(text, sizeof(text), "FPS: %.2f", m_fps);
-		m_pFont->RenderText(text, -1.0, 0.9, 0.05, Vector3f(1.0, 1.0, 1.0));
-
-	}
-
 	DirectionalLight m_dirLight;
 	LightingTechnique *m_pLightingTechnique;
 	Texture * m_pColorMap;
@@ -386,9 +365,6 @@ private:
 	Mesh *m_pMesh;
 	float m_dispFactor;
 	bool m_isWireframe;
-	float m_fps;
-	int m_time;
-	int m_frameCount;
 };
 
 int main(int argc, char** argv)
