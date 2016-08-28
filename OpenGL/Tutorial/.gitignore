@@ -1,4 +1,6 @@
 /Debug/
 /Release/
 /ShadersTes/
+
+/x64/
 *.vcxproj*
