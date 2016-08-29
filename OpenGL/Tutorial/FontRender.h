@@ -156,6 +156,7 @@ public:
 			x += (ch.Advance >> 6)*scale;
 		}
 		glBlendFunc(GL_ONE, GL_ZERO);
+		glDisable(GL_BLEND);
 		glBindVertexArray(0);
 		glBindTexture(GL_TEXTURE_2D,0);
 	}

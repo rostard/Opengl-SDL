@@ -18,7 +18,13 @@
 #include "ds_geom_pass_technique.h"
 #include "gbuffer.h"
 #undef main
-
+enum GBUFFER_TEXTURE_TYPE {
+	GBUFFER_TEXTURE_TYPE_POSITION,
+	GBUFFER_TEXTURE_TYPE_DIFFUSE,
+	GBUFFER_TEXTURE_TYPE_NORMAL,
+	GBUFFER_TEXTURE_TYPE_TEXCOORD,
+	GBUFFER_NUM_TEXTURES
+};
 
 using namespace std;
 
@@ -27,6 +33,8 @@ int WindowWidth = 1280, WindowHeight = 768;
 #define NUM_ROWS 50
 #define NUM_COLS 20
 #define NUM_INSTANCES NUM_ROWS * NUM_COLS
+
+GLuint VBO;
 
 class Main : public ICallbacks
 {
@@ -156,14 +164,18 @@ public:
 			cout << "Couldn't init FontRenderer" << endl;
 			return false;
 		}
-
+		m_pGBuffer = new GBuffer();
+		m_pGBuffer->Init(WindowWidth, WindowHeight);
 		m_pDSGeomPassTech = new DSGeomPassTech();
 		if (!m_pDSGeomPassTech->Init()) {
 			cout << "Couldn't init DSgeometryPassTech" << endl;
 			return false;
 		}
+		m_pDSGeomPassTech->Enable();
+		m_pDSGeomPassTech->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
+
 		m_simple.Init();
-		m_gBuffer.Init(WindowWidth,WindowHeight);
+		ReadyFBO();
 		GLExitIfError();
 		return m_pMesh->LoadMesh("Content/phoenix_ugv.md2");
 	}
@@ -282,7 +294,8 @@ public:
 	void DSGeometryPass() 
 	{
 		m_pDSGeomPassTech->Enable();
-		m_gBuffer.BindForWriting();
+		glUseProgram(0);
+		m_pGBuffer->BindForWriting();
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -298,27 +311,65 @@ public:
 		//m_pMesh->Render(NUM_INSTANCES, WVPMatricx, WorldMatrics);
 		//m_simple.Enable();
 		m_simple.SetWVP(p.GetWVPTrans());
-		m_pMesh->Render();
+
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glDisableVertexAttribArray(0);
+
+
+		//m_pMesh->Render();
+		GLint Status;
+		glGetIntegerv(GL_READ_BUFFER, &Status);
+		printf("%d \n", (Status));
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glGetIntegerv(GL_READ_BUFFER, &Status);
+		printf("%d \n", (Status));
 	}
 	void DSLightingPass() 
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		//glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-		glClear(GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		m_gBuffer.BindForReading();
+		m_pGBuffer->BindForReading();
+
+		GLint Status;
+		glGetIntegerv(GL_READ_BUFFER, &Status);
+		printf("%d \n", (Status));
 
 		GLsizei HalfWidth = (GLsizei)(WindowWidth / 2.0f);
 		GLsizei HalfHeight = (GLsizei)(WindowHeight / 2.0f);
+		//glReadBuffer(GL_COLOR_ATTACHMENT0);
+		m_pGBuffer->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
+		glBlitFramebuffer(0, 0, HalfWidth,WindowHeight, HalfWidth, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_POSITION);
-		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, HalfWidth, HalfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_DIFUSE);
-		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, HalfHeight, HalfWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_NORMAL);
-		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, HalfWidth, HalfHeight, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_TEXCOORD);
-		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, HalfWidth, 0, WindowWidth, HalfHeight, GL_COLOR_BUFFER_BIT,GL_LINEAR);
+		//m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFUSE);
+		//glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, HalfHeight, HalfWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+		//m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
+		//glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, HalfWidth, HalfHeight, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+		//m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
+		//glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, HalfWidth, 0, WindowWidth, HalfHeight, GL_COLOR_BUFFER_BIT,GL_LINEAR);
+
+	}
+
+	static void CreateVertexBuffer()
+	{
+		Vector3f Vertices[3];
+		Vertices[0] = Vector3f(0.0f, 1.0f, 0.0f);
+		Vertices[1] = Vector3f(1.0f, 0.0f, 1.0f);
+		Vertices[2] = Vector3f(-1.0f, 0.0f, 0.0f);
+
+		glGenBuffers(1, &VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 	}
 
 	virtual void RenderSceneCB()
@@ -326,11 +377,11 @@ public:
 		CalcFPS();
 		//m_pLightingTechnique->Enable();
 		m_scale += 0.05f;
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		m_pCamera->OnKeyboard();
 		m_pCamera->OnRender();
-
+		
 		//Pipeline p;
 		//p.Rotate(0.0f, 90.0f, 0.0f);
 		//p.Scale(0.001f, 0.001f, 0.001f);
@@ -348,8 +399,11 @@ public:
 		//	WVPMatricx[i] = p.GetWVPTrans().Transpose();
 		//	WorldMatrics[i] = p.GetWorldTrans().Transpose();
 		//}
-		DSGeometryPass();
-		DSLightingPass();
+
+		RenderFBO();
+
+		//DSGeometryPass();
+		//DSLightingPass();
 		
 		//m_pLightingTechnique->SetEyeWorldPos(m_pCamera->GetPos());
 
@@ -360,7 +414,7 @@ public:
 		
 		//m_pMesh->Render(NUM_INSTANCES,WVPMatricx,WorldMatrics);
 		
-		ShowFPS();
+		
 		//p.WorldPos(3.0f, 0.0f, 0.0f);
 		//p.Rotate(-90.0f, -15.0f, 0.0f);
 		//m_pLightingTechnique->SetVP(p.GetVPTrans());
@@ -384,6 +438,7 @@ public:
 		//m_pSimpleTechnique->SetWVP(p.GetWVPTrans());
 
 		m_pMesh->Render(NULL);*/
+		ShowFPS();
 	}
 	void CalcPositions()
 	{
@@ -419,7 +474,87 @@ private:
 		m_pFont->RenderText(text, -1.0, 0.9, 0.1, Vector3f(1.0, 1.0, 1.0));
 	}
 
-	GBuffer m_gBuffer;
+	void ReadyFBO() {
+		glGenFramebuffers(1, &gBuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+
+		glGenTextures(4, m_textures);
+
+		for (unsigned int i = 0; i < 4; i++) {
+			glBindTexture(GL_TEXTURE_2D, m_textures[i]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
+			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_textures[i], 0);
+		}
+
+		//glGenTextures(1, &gPosition);
+		//glBindTexture(GL_TEXTURE_2D, gPosition);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WindowWidth, WindowWidth, 0, GL_RGB, GL_FLOAT, NULL);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+		//// - Normal color buffer
+		//glGenTextures(1, &gNormal);
+		//glBindTexture(GL_TEXTURE_2D, gNormal);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WindowWidth, WindowWidth, 0, GL_RGB, GL_FLOAT, NULL);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+		//// - Color + Specular color buffer
+		//glGenTextures(1, &gAlbedoSpec);
+		//glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowWidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+		// - Tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+		GLuint attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 , GL_COLOR_ATTACHMENT3 };
+		glDrawBuffers(4, attachments);
+		// - Create and attach depth buffer (renderbuffer)
+		GLuint rboDepth;
+		glGenRenderbuffers(1, &rboDepth);
+		glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WindowWidth, WindowWidth);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+		// - Finally check if framebuffer is complete
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Framebuffer not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+		CreateVertexBuffer();
+	}
+	void RenderFBO() {
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glDisableVertexAttribArray(0);
+
+		GLint Status;
+		glGetIntegerv(GL_READ_BUFFER, &Status);
+		printf("%d\n", Status);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glGetIntegerv(GL_READ_BUFFER, &Status);
+		printf("%d\n", Status);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+		glGetIntegerv(GL_READ_BUFFER, &Status);
+		printf("%d\n", Status);
+		glBlitFramebuffer(0, WindowHeight / 2.0f, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight / 2.0f, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	}
+
+	GLuint m_textures[GBUFFER_NUM_TEXTURES];
+	GLuint gBuffer;
+
+	GBuffer* m_pGBuffer;
 	DirectionalLight m_dirLight;
 	LightingTechnique *m_pLightingTechnique;
 	DSGeomPassTech *m_pDSGeomPassTech;

@@ -22,6 +22,12 @@ bool DSGeomPassTech::Init()
 	m_WorldMatrixLocation = GetUniformLocation("gWorld");
 	m_colorTextureUnitLocation = GetUniformLocation("gColorMap");
 
+	if (m_WVPLocation == INVALID_UNIFORM_LOCATION ||
+		m_WorldMatrixLocation == INVALID_UNIFORM_LOCATION ||
+		m_colorTextureUnitLocation == INVALID_UNIFORM_LOCATION) {
+		return false;
+	}
+
 	return true;
 }
 

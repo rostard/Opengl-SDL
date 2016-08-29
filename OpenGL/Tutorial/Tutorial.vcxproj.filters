@@ -43,7 +43,9 @@
     <ClCompile Include="gbuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ds_geom_pass_technique.cpp" />
+    <ClCompile Include="ds_geom_pass_technique.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="callbacks.h">
