@@ -132,9 +132,11 @@
   <ItemGroup>
     <ClInclude Include="callbacks.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="ds_geom_pass_technique.h" />
     <ClInclude Include="engine_common.h" />
     <ClInclude Include="FontRender.h" />
     <ClInclude Include="font_technique.h" />
+    <ClInclude Include="gbuffer.h" />
     <ClInclude Include="lighting_technique.h" />
     <ClInclude Include="math_3d.h" />
     <ClInclude Include="mesh.h" />
@@ -150,7 +152,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="ds_geom_pass_technique.cpp" />
     <ClCompile Include="font_technique.cpp" />
+    <ClCompile Include="gbuffer.cpp" />
     <ClCompile Include="lighting_technique.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math_3d.cpp" />

@@ -40,6 +40,10 @@
     <ClCompile Include="texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gbuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ds_geom_pass_technique.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="callbacks.h">
@@ -91,6 +95,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gbuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ds_geom_pass_technique.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

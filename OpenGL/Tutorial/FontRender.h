@@ -8,7 +8,6 @@
 #include <map>
 #include <string>
 
-#include "texture.h"
 #include "math_3d.h"
 #include "pipeline.h" 
 #include "font_technique.h"
@@ -44,12 +43,6 @@ public:
 		m_pFontTechnique->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
 		GLCheckError();
 		GenBuffers();
-
-		m_pTexture = new Texture(GL_TEXTURE_2D,"testRed.jpg");
-		if (!m_pTexture->Load()) {
-
-		}
-
 		return true;
 	}
 	bool LoadFont(char* FontName) {
@@ -189,6 +182,4 @@ private:
 	FT_Face face;
 	GLuint VAO, VBO;
 	std::map<GLchar, Character> Characters;
-
-	Texture* m_pTexture;
 };
