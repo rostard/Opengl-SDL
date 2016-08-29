@@ -15,6 +15,8 @@
 #include "picking_technique.h"
 #include "picking_texture.h"
 #include "FontRender.h"
+#include "ds_geom_pass_technique.h"
+#include "gbuffer.h"
 #undef main
 
 
@@ -65,6 +67,10 @@ public:
 		SAFE_DELETE(m_pMesh);
 		//SAFE_DELETE(m_pSimpleTechnique);
 		SAFE_DELETE(m_pLightingTechnique);
+		SAFE_DELETE(m_pColorMap);
+		SAFE_DELETE(m_pDisplacementMap);
+		SAFE_DELETE(m_pDSGeomPassTech);
+		SAFE_DELETE(m_pFont);
 	}
 
 	bool Init() 
@@ -151,7 +157,15 @@ public:
 			return false;
 		}
 
-		return m_pMesh->LoadMesh("Content/spider.obj");
+		m_pDSGeomPassTech = new DSGeomPassTech();
+		if (!m_pDSGeomPassTech->Init()) {
+			cout << "Couldn't init DSgeometryPassTech" << endl;
+			return false;
+		}
+		m_simple.Init();
+		m_gBuffer.Init(WindowWidth,WindowHeight);
+		GLExitIfError();
+		return m_pMesh->LoadMesh("Content/phoenix_ugv.md2");
 	}
 
 	void Run()
@@ -265,33 +279,78 @@ public:
 			m_pMesh->Render(NULL);
 		}
 	}*/
+	void DSGeometryPass() 
+	{
+		m_pDSGeomPassTech->Enable();
+		m_gBuffer.BindForWriting();
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		Pipeline p;
+		p.Scale(0.1f, 0.1f, 0.1f);
+		p.Rotate(0.0f, m_scale, 0.0f);
+		p.WorldPos(-0.8f, -1.0f, 12.0f);
+		p.SetCamera(m_pCamera->GetPos(), m_pCamera->GetTarget(), m_pCamera->GetUp());
+		p.SetPerspectiveProj(m_persProjInfo);
+		m_pDSGeomPassTech->SetWVP(p.GetWVPTrans());
+		m_pDSGeomPassTech->SetWorldMatrix(p.GetWorldTrans());
+
+		//m_pMesh->Render(NUM_INSTANCES, WVPMatricx, WorldMatrics);
+		//m_simple.Enable();
+		m_simple.SetWVP(p.GetWVPTrans());
+		m_pMesh->Render();
+	}
+	void DSLightingPass() 
+	{
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		m_gBuffer.BindForReading();
+
+		GLsizei HalfWidth = (GLsizei)(WindowWidth / 2.0f);
+		GLsizei HalfHeight = (GLsizei)(WindowHeight / 2.0f);
+
+		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_POSITION);
+		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, HalfWidth, HalfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_DIFUSE);
+		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, HalfHeight, HalfWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_NORMAL);
+		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, HalfWidth, HalfHeight, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		m_gBuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE::GBUFFER_TEXTURE_TYPE_TEXCOORD);
+		glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, HalfWidth, 0, WindowWidth, HalfHeight, GL_COLOR_BUFFER_BIT,GL_LINEAR);
+	}
+
 	virtual void RenderSceneCB()
 	{
 		CalcFPS();
-		m_pLightingTechnique->Enable();
-		m_scale += 0.005f;
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//m_pLightingTechnique->Enable();
+		m_scale += 0.05f;
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		m_pCamera->OnKeyboard();
 		m_pCamera->OnRender();
 
-		Pipeline p;
-		p.Rotate(0.0f, 90.0f, 0.0f);
-		p.Scale(0.001f, 0.001f, 0.001f);
+		//Pipeline p;
+		//p.Rotate(0.0f, 90.0f, 0.0f);
+		//p.Scale(0.001f, 0.001f, 0.001f);
+		//
+		//p.SetCamera(m_pCamera->GetPos(), m_pCamera->GetTarget(), m_pCamera->GetUp());
+		//p.SetPerspectiveProj(m_persProjInfo);
+
+		//Matrix4f WVPMatricx[NUM_INSTANCES];
+		//Matrix4f WorldMatrics[NUM_INSTANCES];
+
+		//for (unsigned int i = 0; i < NUM_INSTANCES; i++) {
+		//	Vector3f Pos(m_positions[i]);
+		//	Pos.y += sinf(m_scale)*m_velocity[i];
+		//	p.WorldPos(Pos);
+		//	WVPMatricx[i] = p.GetWVPTrans().Transpose();
+		//	WorldMatrics[i] = p.GetWorldTrans().Transpose();
+		//}
+		DSGeometryPass();
+		DSLightingPass();
 		
-		p.SetCamera(m_pCamera->GetPos(), m_pCamera->GetTarget(), m_pCamera->GetUp());
-		p.SetPerspectiveProj(m_persProjInfo);
-
-		Matrix4f WVPMatricx[NUM_INSTANCES];
-		Matrix4f WorldMatrics[NUM_INSTANCES];
-
-		for (unsigned int i = 0; i < NUM_INSTANCES; i++) {
-			Vector3f Pos(m_positions[i]);
-			Pos.y += sinf(m_scale)*m_velocity[i];
-			p.WorldPos(Pos);
-			WVPMatricx[i] = p.GetWVPTrans().Transpose();
-			WorldMatrics[i] = p.GetWorldTrans().Transpose();
-		}
 		//m_pLightingTechnique->SetEyeWorldPos(m_pCamera->GetPos());
 
 		//m_pLightingTechnique->SetVP(p.GetVPTrans());
@@ -299,7 +358,7 @@ public:
 
 		//m_pLightingTechnique->SetTesselationLevel(m_dispFactor);
 		
-		m_pMesh->Render(NUM_INSTANCES,WVPMatricx,WorldMatrics);
+		//m_pMesh->Render(NUM_INSTANCES,WVPMatricx,WorldMatrics);
 		
 		ShowFPS();
 		//p.WorldPos(3.0f, 0.0f, 0.0f);
@@ -353,14 +412,19 @@ private:
 			m_frameCount = 0;
 		}
 	}
+
 	void ShowFPS() {
 		char text[30];
 		snprintf(text, sizeof(text), "FPS: %.2f", m_FPS);
 		m_pFont->RenderText(text, -1.0, 0.9, 0.1, Vector3f(1.0, 1.0, 1.0));
 	}
+
+	GBuffer m_gBuffer;
 	DirectionalLight m_dirLight;
 	LightingTechnique *m_pLightingTechnique;
+	DSGeomPassTech *m_pDSGeomPassTech;
 	Texture * m_pColorMap;
+	SimpleColorTechnique m_simple;
 	Texture * m_pDisplacementMap;
 	/*SimpleColorTechnique *m_pSimpleTechnique;
 	PickingTechnique *m_pPickingTechnique;

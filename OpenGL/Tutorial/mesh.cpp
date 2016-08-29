@@ -254,7 +254,7 @@ void Mesh::Render()
 			m_Textures[MaterialIndex]->Bind(COLOR_TEXTURE_UNIT);
 		}
 
-		glDrawElementsBaseVertex(GL_PATCHES,
+		glDrawElementsBaseVertex(GL_TRIANGLES,
 			m_Entries[i].NumIndices,
 			GL_UNSIGNED_INT,
 			(void*)(sizeof(unsigned int)*m_Entries[i].BaseIndex),
