@@ -80,13 +80,13 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
 
 void GBuffer::BindForWriting()
 {
-	glBindBuffer(GL_FRAMEBUFFER, m_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 	
 }
 
 void GBuffer::BindForReading()
 {
-	glBindBuffer(GL_READ_FRAMEBUFFER, m_fbo);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
 	
 }
 
